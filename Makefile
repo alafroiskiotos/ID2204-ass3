@@ -11,8 +11,8 @@ EXEC=no-overlap
 
 all: $(EXEC)
 
-sudoku: $(OBJS0)
-	$(CXX) $(CXXFLAGS) -o no-overlapp $(OBJS0) $(LIBS)
+no-overlap: $(OBJS0)
+	$(CXX) $(CXXFLAGS) -o no-overlap $(OBJS0) $(LIBS)
 
 no-overlap.o: no-overlap.cpp
 

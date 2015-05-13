@@ -90,6 +90,8 @@ public:
     // This is what YOU have to add!
     //
 
+	  if ((x0.lq(home, x1.min() - w0)) == Int::ME_INT_FAILED)
+		  return ES_FAILED;
   }
 
   // Dispose propagator and return its size
@@ -130,4 +132,3 @@ void nooverlap(Home home,
   if (NoOverlap::post(home,vx,wc,vy,hc) != ES_OK)
     home.fail();
 }
-
