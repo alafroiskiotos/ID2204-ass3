@@ -3,11 +3,11 @@ CXXFLAGS=-O1 -Wall
 LIBS=-lgecodeflatzinc -lgecodedriver -lgecodegist -lgecodesearch -lgecodeminimodel \
 	-lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport
 RM=rm
-#SRCS0=no-overlap.cpp
+SRCS0=no-overlap.cpp
 SRCS1=square.cpp
-#OBJS0=$(subst .cpp,.o,$(SRCS0))
+OBJS0=$(subst .cpp,.o,$(SRCS0))
 OBJS1=$(subst .cpp,.o,$(SRCS1))
-EXEC=square
+EXEC=square no-overlap
 
 all: $(EXEC)
 
