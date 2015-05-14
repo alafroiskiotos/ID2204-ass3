@@ -85,6 +85,7 @@ public:
 
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
+<<<<<<< HEAD
       // X coordinate constraint
       for(int i = x.size() - 1; i > 0; i--) {
           if(x[i].lq(home, x[i - 1].min() - w[i]) == Int::ME_INT_FAILED ||
@@ -110,6 +111,15 @@ public:
       
       // Eventually the fixpoint has reached
       return home.ES_SUBSUMED(*this);
+=======
+
+    //
+    // This is what YOU have to add!
+    //
+
+	  if ((x0.lq(home, x1.min() - w0)) == Int::ME_INT_FAILED)
+		  return ES_FAILED;
+>>>>>>> 3b5f7ea8bfa2d17b9f1dcd1a8ec3dbc3caa54ff9
   }
 
   // Dispose propagator and return its size
@@ -150,4 +160,3 @@ void nooverlap(Home home,
   if (NoOverlap::post(home,vx,wc,vy,hc) != ES_OK)
     home.fail();
 }
-
