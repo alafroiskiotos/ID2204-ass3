@@ -85,11 +85,31 @@ public:
 
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-
-    //
-    // This is what YOU have to add!
-    //
-
+      // X coordinate constraint
+      for(int i = x.size() - 1; i > 0; i--) {
+          if(x[i].lq(home, x[i - 1].min() - w[i]) == Int::ME_INT_FAILED ||
+             x[i].gq(home, x[i - 1].max() + w[i - 1]) == Int::ME_INT_FAILED) {
+              return ES_FAILED;
+          }
+      }
+      
+      // Y coordinate constraint
+      for(int i = y.size() - 1; i > 0; i--) {
+          if(y[i].lq(home, y[i - 1].min() - h[i - 1]) == Int::ME_INT_FAILED ||
+             y[i].gq(home, y[i - 1].max() + h[i - 1]) == Int::ME_INT_FAILED) {
+              return ES_FAILED;
+          }
+      }
+      
+      // Checking the assignment of the (x,y) coordinates
+      for(int i = 0; i < x.size(); i++) {
+          if(!x[i].assigned() || !y[i].assigned()) {
+              return ES_NOFIX;
+          }
+      }
+      
+      // Eventually the fixpoint has reached
+      return home.ES_SUBSUMED(*this);
   }
 
   // Dispose propagator and return its size
