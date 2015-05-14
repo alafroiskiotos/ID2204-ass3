@@ -125,69 +125,6 @@ public:
         (void) Propagator::dispose(home);
         return sizeof(*this);
     }
-<<<<<<< HEAD
-=======
-  }
-  // Create copy during cloning
-  virtual Propagator* copy(Space& home, bool share) {
-    return new (home) NoOverlap(home,share,*this);
-  }
-
-  // Return cost (defined as cheap quadratic)
-  virtual PropCost cost(const Space&, const ModEventDelta&) const {
-    return PropCost::quadratic(PropCost::LO,2*x.size());
-  }
-
-  // Perform propagation
-  virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-<<<<<<< HEAD
-      // X coordinate constraint
-      for(int i = x.size() - 1; i > 0; i--) {
-          if(x[i].lq(home, x[i - 1].min() - w[i]) == Int::ME_INT_FAILED ||
-             x[i].gq(home, x[i - 1].max() + w[i - 1]) == Int::ME_INT_FAILED) {
-              return ES_FAILED;
-          }
-      }
-      
-      // Y coordinate constraint
-      for(int i = y.size() - 1; i > 0; i--) {
-          if(y[i].lq(home, y[i - 1].min() - h[i - 1]) == Int::ME_INT_FAILED ||
-             y[i].gq(home, y[i - 1].max() + h[i - 1]) == Int::ME_INT_FAILED) {
-              return ES_FAILED;
-          }
-      }
-      
-      // Checking the assignment of the (x,y) coordinates
-      for(int i = 0; i < x.size(); i++) {
-          if(!x[i].assigned() || !y[i].assigned()) {
-              return ES_NOFIX;
-          }
-      }
-      
-      // Eventually the fixpoint has reached
-      return home.ES_SUBSUMED(*this);
-=======
-
-    //
-    // This is what YOU have to add!
-    //
-
-<<<<<<< HEAD
-=======
-	  if ((x0.lq(home, x1.min() - w0)) == Int::ME_INT_FAILED)
-		  return ES_FAILED;
->>>>>>> 3b5f7ea8bfa2d17b9f1dcd1a8ec3dbc3caa54ff9
->>>>>>> daf3009ce3f781ab7bdac2704afcb11d99507068
-  }
-
-  // Dispose propagator and return its size
-  virtual size_t dispose(Space& home) {
-    x.cancel(home,*this,PC_INT_BND);
-    y.cancel(home,*this,PC_INT_BND);
-    (void) Propagator::dispose(home);
-    return sizeof(*this);
-  }
->>>>>>> b09a5b9f922228ff23c0852c7e205a6f89f46338
 };
 
 /*
