@@ -12,6 +12,8 @@
 #include <gecode/int.hh>
 #include <gecode/minimodel.hh>
 
+#include "no-overlap.cpp"
+
 using namespace Gecode;
 
 class Square : public Script {
@@ -33,8 +35,6 @@ public:
             for(int i = 0; i < n - 1; i++) {
                 rel(*this, x[i] + size(i) <= s);
                 rel(*this, y[i] + size(i) <= s);
-//                dom(*this, LinIntExpr(x[i] + size(i)).post(*this, ICL_VAL), s);
-//                dom(*this, LinIntExpr(y[i] + size(i)).post(*this, ICL_VAL), s);
             }
             
             // symmetry removal
@@ -78,31 +78,44 @@ public:
                 rel(*this, y[0], IRT_LE, 10);
             }
 
-            for(int i = 0; i < n - 1; i++) {
-                // The last element (1x1) is not considered.
-                for(int j = i + 1; j < n; j++) {
-                    BoolVarArgs b(*this, 4, 0, 1);
-                    
-                    // Left constraint.
-                    rel(*this, LinIntExpr(x[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
-                        LinIntExpr(x[j]).post(*this, ICL_VAL), b[0]);
-
-                    // Right constraint.
-                    rel(*this, LinIntExpr(x[i]).post(*this, ICL_VAL), IRT_GQ,
-                        LinIntExpr(x[j] + size(j)).post(*this, ICL_VAL), b[1]);
-
-                    // Below constraint.
-                    rel(*this, LinIntExpr(y[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
-                        LinIntExpr(y[j]).post(*this, ICL_VAL), b[2]);
-                    
-                    // Above constraint.
-                    rel(*this, LinIntExpr(y[i]).post(*this, ICL_VAL), IRT_GQ,
-                        LinIntExpr(y[j] + size(j)).post(*this, ICL_VAL), b[3]);
-                    
-                    linear(*this, b, IRT_GQ, 1);
-                }
+//            for(int i = 0; i < n - 1; i++) {
+//                // The last element (1x1) is not considered.
+//                for(int j = i + 1; j < n; j++) {
+//                    BoolVarArgs b(*this, 4, 0, 1);
+//                    
+//                    // Left constraint.
+//                    rel(*this, LinIntExpr(x[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
+//                        LinIntExpr(x[j]).post(*this, ICL_VAL), b[0]);
+//
+//                    // Right constraint.
+//                    rel(*this, LinIntExpr(x[i]).post(*this, ICL_VAL), IRT_GQ,
+//                        LinIntExpr(x[j] + size(j)).post(*this, ICL_VAL), b[1]);
+//
+//                    // Below constraint.
+//                    rel(*this, LinIntExpr(y[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
+//                        LinIntExpr(y[j]).post(*this, ICL_VAL), b[2]);
+//                    
+//                    // Above constraint.
+//                    rel(*this, LinIntExpr(y[i]).post(*this, ICL_VAL), IRT_GQ,
+//                        LinIntExpr(y[j] + size(j)).post(*this, ICL_VAL), b[3]);
+//                    
+//                    linear(*this, b, IRT_GQ, 1);
+//                }
+//            }
+            
+            IntArgs w(n);
+            IntArgs h(n);
+//            int w[n];
+//            int h[n];
+            IntVarArgs x1(n);
+            IntVarArgs y1(n);
+            
+            for(int i = 0; i < n; i++) {
+                w[i] = size(i);
+                h[i] = size(i);
             }
             
+            nooverlap(*this, x1, w, y1, h, ICL_VAL);
             
             branch(*this, s, INT_VAL_MIN());
             branch(*this, x, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
