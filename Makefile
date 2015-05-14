@@ -7,7 +7,7 @@ SRCS0=no-overlap.cpp
 SRCS1=square.cpp
 OBJS0=$(subst .cpp,.o,$(SRCS0))
 OBJS1=$(subst .cpp,.o,$(SRCS1))
-EXEC=square no-overlap
+EXEC=square
 
 all: $(EXEC)
 
