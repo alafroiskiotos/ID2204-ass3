@@ -38,13 +38,49 @@ public:
             }
             
             // symmetry removal
-            rel(*this, x[0], IRT_GQ, 1);
-            rel(*this, x[0], IRT_LE, 1 + floor(((s.max() - n) / 2)));
+            rel(*this, x[0], IRT_GQ, 0);
+            rel(*this, x[0], IRT_LE, floor(((s.max() - n) / 2)));
             rel(*this, y[0], IRT_LQ, x[0]);
+            
+            // empty strip dominance
+            if(n == 2) {
+                rel(*this, x[0], IRT_LE, 2);
+                rel(*this, y[0], IRT_LE, 2);
+            } else if (n == 3) {
+                rel(*this, x[0], IRT_LE, 3);
+                rel(*this, y[0], IRT_LE, 3);
+            } else if (n == 4) {
+                rel(*this, x[0], IRT_LE, 2);
+                rel(*this, y[0], IRT_LE, 2);
+            } else if(n >= 5 && n <= 8) {
+                rel(*this, x[0], IRT_LE, 3);
+                rel(*this, y[0], IRT_LE, 3);
+            } else if (n >= 9 && n <= 11) {
+                rel(*this, x[0], IRT_LE, 4);
+                rel(*this, y[0], IRT_LE, 4);
+            } else if(n >= 12 && n <= 17) {
+                rel(*this, x[0], IRT_LE, 5);
+                rel(*this, y[0], IRT_LE, 5);
+            } else if (n >= 18 && n <= 21) {
+                rel(*this, x[0], IRT_LE, 6);
+                rel(*this, y[0], IRT_LE, 6);
+            } else if (n >= 22 && n <= 29) {
+                rel(*this, x[0], IRT_LE, 7);
+                rel(*this, y[0], IRT_LE, 7);
+            } else if (n >= 30 && n <= 34) {
+                rel(*this, x[0], IRT_LE, 8);
+                rel(*this, y[0], IRT_LE, 8);
+            } else if (n >= 35 && n <= 44) {
+                rel(*this, x[0], IRT_LE, 9);
+                rel(*this, y[0], IRT_LE, 9);
+            } else if (n == 45) {
+                rel(*this, x[0], IRT_LE, 10);
+                rel(*this, y[0], IRT_LE, 10);
+            }
 
             for(int i = 0; i < n - 1; i++) {
-                // The last element (1x1) is not considered and always placed in (0, 0) because of the symmetry removal.
-                for(int j = i + 1; j < n - 1; j++) {
+                // The last element (1x1) is not considered.
+                for(int j = i + 1; j < n; j++) {
                     BoolVarArgs b(*this, 4, 0, 1);
                     
                     // Left constraint.
@@ -117,7 +153,7 @@ public:
 
 int main(int argc, char* argv[]) {
     SizeOptions opt("Square");
-    opt.size(5);
+    opt.size(7);
     opt.parse(argc, argv);
     Script::run<Square,BAB,SizeOptions>(opt);
     return 0;
