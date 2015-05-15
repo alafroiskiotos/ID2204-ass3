@@ -44,7 +44,7 @@ public:
             (void) new (home) NoOverlap(home,x,w,y,h);
         return ES_OK;
     }
-    
+
     // Copy constructor during cloning
     NoOverlap(Space& home, bool share, NoOverlap& p)
     : Propagator(home,share,p) {
@@ -61,47 +61,49 @@ public:
     virtual Propagator* copy(Space& home, bool share) {
         return new (home) NoOverlap(home,share,*this);
     }
-    
+
     // Return cost (defined as cheap quadratic)
     virtual PropCost cost(const Space&, const ModEventDelta&) const {
         return PropCost::quadratic(PropCost::LO,2*x.size());
     }
-    
+
     // Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-        // X coordinate constraint
-        for(int i = 0; i < x.size() - 1; i++) {
-            for(int j = 0; j < x.size(); j++) {
-                // Left and right constraints.
-                if(x[i].lq(home, x[j].min() - w[i]) == Int::ME_INT_FAILED ||
-                   x[i].gq(home, x[j].max() + w[j]) == Int::ME_INT_FAILED) {
-                    return ES_FAILED;
-                }
-            }
-        }
-        
-        // Y coordinate constraint
-        for(int i = 0; i < y.size() - 1; i++) {
-            for(int j = 0; j < y.size(); j++) {
-                // Below and above constraints.
-                if(y[i].lq(home, y[j].min() - h[i]) == Int::ME_INT_FAILED ||
-                   y[i].gq(home, y[j].max() + h[j]) == Int::ME_INT_FAILED) {
-                    return ES_FAILED;
-                }
-            }
-        }
-        
-        // Checking the assignment of the (x,y) coordinates
-        for(int i = 0; i < x.size(); i++) {
-            if(!x[i].assigned() || !y[i].assigned()) {
-                return ES_NOFIX;
-            }
-        }
-        
-        // Eventually the fixpoint has reached
-        return home.ES_SUBSUMED(*this);
+    	int counter = 0;
+
+    	for(int i = 0; i < x.size(); i++) {
+    		if(x[i].assigned() && y[i].assigned()) {
+    			counter++;
+
+    			for(int j = i + 1; j < x.size(); j++) {
+
+    				if (i == j)
+    					continue;
+
+    				if (me_modified(x[j].gq(home, x[i].val() + w[i])) &&
+    				    me_modified(x[j].lq(home, x[i].val() - w[j])) &&
+    					me_modified(y[j].lq(home, y[i].val() - h[j])) &&
+    					me_modified(y[j].gq(home, y[i].val() + h[i]))) {
+    				    	return ES_NOFIX;
+    				}
+
+    				if (me_failed(x[j].gq(home, x[i].val() + w[i])) &&
+    					me_failed(x[j].lq(home, x[i].val() - w[j])) &&
+						me_failed(y[j].lq(home, y[i].val() - h[j])) &&
+						me_failed(y[j].gq(home, y[i].val() + h[i]))) {
+    						return ES_FAILED;
+    				}
+    			}
+    		}
+    	}
+
+    	if (counter == x.size()) {
+    		return home.ES_SUBSUMED(*this);
+    	}
+
+    	return ES_FIX;
     }
-    
+
     // Dispose propagator and return its size
     virtual size_t dispose(Space& home) {
         x.cancel(home,*this,PC_INT_BND);
@@ -111,35 +113,6 @@ public:
     }
 };
 
-/*
- * Post the constraint that the rectangles defined by the coordinates
- * x and y and width w and height h do not overlap.
- *
- * This is the function that you will call from your model. The best
- * is to paste the entire file into your model.
- */
-void nooverlap(Home home,
-               const IntVarArgs& x, const IntArgs& w,
-               const IntVarArgs& y, const IntArgs& h) {
-    // Check whether the arguments make sense
-    if ((x.size() != y.size()) || (x.size() != w.size()) ||
-        (y.size() != h.size()))
-        throw ArgumentSizeMismatch("nooverlap");
-    // Never post a propagator in a failed space
-    if (home.failed()) return;
-    // Set up array of views for the coordinates
-    ViewArray<IntView> vx(home,x);
-    ViewArray<IntView> vy(home,y);
-    // Set up arrays (allocated in home) for width and height and initialize
-    int* wc = static_cast<Space&>(home).alloc<int>(x.size());
-    int* hc = static_cast<Space&>(home).alloc<int>(y.size());
-    for (int i=x.size(); i--; ) {
-        wc[i]=w[i]; hc[i]=h[i];
-    }
-    // If posting failed, fail space
-    if (NoOverlap::post(home,vx,wc,vy,hc) != ES_OK)
-        home.fail();
-}
 
 class Square : public Script {
 protected:
@@ -152,6 +125,37 @@ protected:
     // These two arrays represent the coordinates of the squares, accordingly to the relative axis.
     IntVarArray x, y;
 public:
+
+    /*
+     * Post the constraint that the rectangles defined by the coordinates
+     * x and y and width w and height h do not overlap.
+     *
+     * This is the function that you will call from your model. The best
+     * is to paste the entire file into your model.
+     */
+    void nooverlap(Home home,
+                   const IntVarArgs& x, const IntArgs& w,
+                   const IntVarArgs& y, const IntArgs& h) {
+        // Check whether the arguments make sense
+        if ((x.size() != y.size()) || (x.size() != w.size()) ||
+            (y.size() != h.size()))
+            throw ArgumentSizeMismatch("nooverlap");
+        // Never post a propagator in a failed space
+        if (home.failed()) return;
+        // Set up array of views for the coordinates
+        ViewArray<IntView> vx(home,x);
+        ViewArray<IntView> vy(home,y);
+        // Set up arrays (allocated in home) for width and height and initialize
+        int* wc = static_cast<Space&>(home).alloc<int>(x.size());
+        int* hc = static_cast<Space&>(home).alloc<int>(y.size());
+        for (int i=x.size(); i--; ) {
+            wc[i]=w[i]; hc[i]=h[i];
+        }
+        // If posting failed, fail space
+        if (NoOverlap::post(home,vx,wc,vy,hc) != ES_OK)
+            home.fail();
+    }
+
     Square(const SizeOptions& opt) : Script(opt), n(opt.size()),
     x(*this, n, 0, maxSourroundingSquareSize()), y(*this, n, 0, maxSourroundingSquareSize()),
     s(*this, maxSourroundingSquareSize(), sumN()) {
@@ -227,20 +231,18 @@ public:
         //                    linear(*this, b, IRT_GQ, 1);
         //                }
         //            }
-        
+
         IntArgs w(n);
         IntArgs h(n);
-        //            int w[n];
-        //            int h[n];
-        IntVarArgs x1(n);
-        IntVarArgs y1(n);
+        IntVarArgs x1(x);
+        IntVarArgs y1(y);
         
         for(int i = 0; i < n; i++) {
             w[i] = size(i);
             h[i] = size(i);
         }
         
-        nooverlap(*this, x, w, y, h, ICL_VAL);
+        nooverlap(*this, x1, w, y1, h);
         
         branch(*this, s, INT_VAL_MIN());
         branch(*this, x, INT_VAR_SIZE_MIN(), INT_VAL_MIN());

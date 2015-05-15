@@ -85,37 +85,39 @@ public:
     
     // Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-        // X coordinate constraint
-        for(int i = 0; i < x.size() - 1; i++) {
-            for(int j = 0; j < x.size(); j++) {
-                // Left and right constraints.
-                if(x[i].lq(home, x[j].min() - w[i]) == Int::ME_INT_FAILED ||
-                   x[i].gq(home, x[j].max() + w[j]) == Int::ME_INT_FAILED) {
-                    return ES_FAILED;
-                }
-            }
-        }
-        
-        // Y coordinate constraint
-        for(int i = 0; i < y.size() - 1; i++) {
-            for(int j = 0; j < y.size(); j++) {
-                // Below and above constraints.
-                if(y[i].lq(home, y[j].min() - h[i]) == Int::ME_INT_FAILED ||
-                   y[i].gq(home, y[j].max() + h[j]) == Int::ME_INT_FAILED) {
-                    return ES_FAILED;
-                }
-            }
-        }
-        
-        // Checking the assignment of the (x,y) coordinates
-        for(int i = 0; i < x.size(); i++) {
-            if(!x[i].assigned() || !y[i].assigned()) {
-                return ES_NOFIX;
-            }
-        }
-        
-        // Eventually the fixpoint has reached
-        return home.ES_SUBSUMED(*this);
+    	int counter = 0;
+
+    	for(int i = 0; i < x.size(); i++) {
+    		if(x[i].assigned() && y[i].assigned()) {
+    			counter++;
+
+    			for(int j = i + 1; j < x.size(); j++) {
+
+    				if (i == j)
+    					continue;
+
+    				if (me_modified(x[j].gq(home, x[i].val() + w[i])) &&
+    				    me_modified(x[j].lq(home, x[i].val() - w[j])) &&
+    					me_modified(y[j].lq(home, y[i].val() - h[j])) &&
+    					me_modified(y[j].gq(home, y[i].val() + h[i]))) {
+    				    	return ES_NOFIX;
+    				}
+
+    				if (me_failed(x[j].gq(home, x[i].val() + w[i])) &&
+    					me_failed(x[j].lq(home, x[i].val() - w[j])) &&
+						me_failed(y[j].lq(home, y[i].val() - h[j])) &&
+						me_failed(y[j].gq(home, y[i].val() + h[i]))) {
+    						return ES_FAILED;
+    				}
+    			}
+    		}
+    	}
+
+    	if (counter == x.size()) {
+    		return home.ES_SUBSUMED(*this);
+    	}
+
+    	return ES_FIX;
     }
     
     // Dispose propagator and return its size
@@ -126,6 +128,7 @@ public:
         return sizeof(*this);
     }
 };
+
 
 /*
  * Post the constraint that the rectangles defined by the coordinates
