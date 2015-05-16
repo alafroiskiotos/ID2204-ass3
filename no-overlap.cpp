@@ -60,7 +60,7 @@ public:
             (void) new (home) NoOverlap(home,x,w,y,h);
         return ES_OK;
     }
-    
+
     // Copy constructor during cloning
     NoOverlap(Space& home, bool share, NoOverlap& p)
     : Propagator(home,share,p) {
@@ -77,12 +77,12 @@ public:
     virtual Propagator* copy(Space& home, bool share) {
         return new (home) NoOverlap(home,share,*this);
     }
-    
+
     // Return cost (defined as cheap quadratic)
     virtual PropCost cost(const Space&, const ModEventDelta&) const {
         return PropCost::quadratic(PropCost::LO,2*x.size());
     }
-    
+
     // Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
     	int counter = 0;
@@ -93,9 +93,11 @@ public:
 
     			for(int j = i + 1; j < x.size(); j++) {
 
+    				// Ignore same square coordinates
     				if (i == j)
     					continue;
 
+    				// If stores are modified then propagator has not reached a fixpoint yet
     				if (me_modified(x[j].gq(home, x[i].val() + w[i])) &&
     				    me_modified(x[j].lq(home, x[i].val() - w[j])) &&
     					me_modified(y[j].lq(home, y[i].val() - h[j])) &&
@@ -103,6 +105,7 @@ public:
     				    	return ES_NOFIX;
     				}
 
+    				// If all stores have failed then fail home
     				if (me_failed(x[j].gq(home, x[i].val() + w[i])) &&
     					me_failed(x[j].lq(home, x[i].val() - w[j])) &&
 						me_failed(y[j].lq(home, y[i].val() - h[j])) &&
@@ -113,13 +116,14 @@ public:
     		}
     	}
 
+    	// When all squares have been assigned coordinates, subsume this propagator
     	if (counter == x.size()) {
     		return home.ES_SUBSUMED(*this);
     	}
 
     	return ES_FIX;
     }
-    
+
     // Dispose propagator and return its size
     virtual size_t dispose(Space& home) {
         x.cancel(home,*this,PC_INT_BND);

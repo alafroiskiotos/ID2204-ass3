@@ -77,9 +77,11 @@ public:
 
     			for(int j = i + 1; j < x.size(); j++) {
 
+    				// Ignore same square coordinates
     				if (i == j)
     					continue;
 
+    				// If stores are modified then propagator has not reached a fixpoint yet
     				if (me_modified(x[j].gq(home, x[i].val() + w[i])) &&
     				    me_modified(x[j].lq(home, x[i].val() - w[j])) &&
     					me_modified(y[j].lq(home, y[i].val() - h[j])) &&
@@ -87,6 +89,7 @@ public:
     				    	return ES_NOFIX;
     				}
 
+    				// If all stores have failed then fail home
     				if (me_failed(x[j].gq(home, x[i].val() + w[i])) &&
     					me_failed(x[j].lq(home, x[i].val() - w[j])) &&
 						me_failed(y[j].lq(home, y[i].val() - h[j])) &&
@@ -97,6 +100,7 @@ public:
     		}
     	}
 
+    	// When all squares have been assigned coordinates, subsume this propagator
     	if (counter == x.size()) {
     		return home.ES_SUBSUMED(*this);
     	}
@@ -125,6 +129,8 @@ protected:
     // These two arrays represent the coordinates of the squares, accordingly to the relative axis.
     IntVarArray x, y;
 public:
+
+    // TODO Delete nooverlap method from the deliverable
 
     /*
      * Post the constraint that the rectangles defined by the coordinates
@@ -157,7 +163,7 @@ public:
     }
 
     Square(const SizeOptions& opt) : Script(opt), n(opt.size()),
-    x(*this, n, 0, maxSourroundingSquareSize()), y(*this, n, 0, maxSourroundingSquareSize()),
+    x(*this, opt.size(), 0, maxSourroundingSquareSize()), y(*this, opt.size(), 0, maxSourroundingSquareSize()),
     s(*this, maxSourroundingSquareSize(), sumN()) {
         
         // Every square must fit the surrounding square.
@@ -206,32 +212,33 @@ public:
             rel(*this, x[0], IRT_LE, 10);
             rel(*this, y[0], IRT_LE, 10);
         }
-        
-        //            for(int i = 0; i < n - 1; i++) {
-        //                // The last element (1x1) is not considered.
-        //                for(int j = i + 1; j < n; j++) {
-        //                    BoolVarArgs b(*this, 4, 0, 1);
-        //
-        //                    // Left constraint.
-        //                    rel(*this, LinIntExpr(x[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
-        //                        LinIntExpr(x[j]).post(*this, ICL_VAL), b[0]);
-        //
-        //                    // Right constraint.
-        //                    rel(*this, LinIntExpr(x[i]).post(*this, ICL_VAL), IRT_GQ,
-        //                        LinIntExpr(x[j] + size(j)).post(*this, ICL_VAL), b[1]);
-        //
-        //                    // Below constraint.
-        //                    rel(*this, LinIntExpr(y[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
-        //                        LinIntExpr(y[j]).post(*this, ICL_VAL), b[2]);
-        //
-        //                    // Above constraint.
-        //                    rel(*this, LinIntExpr(y[i]).post(*this, ICL_VAL), IRT_GQ,
-        //                        LinIntExpr(y[j] + size(j)).post(*this, ICL_VAL), b[3]);
-        //
-        //                    linear(*this, b, IRT_GQ, 1);
-        //                }
-        //            }
 
+    	// The last element (1x1) is not considered.
+        /*for(int i = 0; i < n - 1; i++) {
+        	for(int j = i + 1; j < n; j++) {
+        		BoolVarArgs b(*this, 4, 0, 1);
+
+        		// Left constraint.
+        		rel(*this, LinIntExpr(x[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
+        				LinIntExpr(x[j]).post(*this, ICL_VAL), b[0]);
+
+        		// Right constraint.
+        		rel(*this, LinIntExpr(x[i]).post(*this, ICL_VAL), IRT_GQ,
+        				LinIntExpr(x[j] + size(j)).post(*this, ICL_VAL), b[1]);
+
+        		// Below constraint.
+        		rel(*this, LinIntExpr(y[i] + size(i)).post(*this, ICL_VAL), IRT_LQ,
+        				LinIntExpr(y[j]).post(*this, ICL_VAL), b[2]);
+
+        		// Above constraint.
+        		rel(*this, LinIntExpr(y[i]).post(*this, ICL_VAL), IRT_GQ,
+        				LinIntExpr(y[j] + size(j)).post(*this, ICL_VAL), b[3]);
+
+        		linear(*this, b, IRT_GQ, 1);
+        	}
+        }*/
+
+        // TODO Comment out FROM here for the deliverable
         IntArgs w(n);
         IntArgs h(n);
         IntVarArgs x1(x);
@@ -244,6 +251,8 @@ public:
         
         nooverlap(*this, x1, w, y1, h);
         
+        // TODO Comment out TO here for the deliverable
+
         branch(*this, s, INT_VAL_MIN());
         branch(*this, x, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
         branch(*this, y, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
@@ -269,7 +278,7 @@ public:
     }
     
     /// Constructor for cloning \a s
-    Square(bool share, Square& square, int n) : Script(share, square), n(n) {
+    Square(bool share, Square& square, int size) : Script(share, square), n(size) {
         x.update(*this, share, square.x);
         y.update(*this, share, square.y);
         s.update(*this, share, square.s);
